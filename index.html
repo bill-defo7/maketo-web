@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1A1411" />
+    <meta name="description" content="Maketo : vends et achète entre étudiants du campus ESTLC d'Ambam." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>Maketo — le marché des étudiants</title>
+    <script>
+      // Applique le thème avant le premier affichage (évite un flash blanc en mode nuit)
+      (function () {
+        var mode = 'clair';
+        try { mode = JSON.parse(localStorage.getItem('maketo:theme')) || 'clair'; } catch (e) {}
+        var sombre = mode === 'sombre' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (sombre) document.documentElement.classList.add('dark');
+        try { if (JSON.parse(localStorage.getItem('maketo:langue')) === 'en') document.documentElement.lang = 'en'; } catch (e) {}
+        document.documentElement.classList.add('anim'); // les sections apparaissent au défilement
+      })();
+    </script>
+  </head>
+  <body class="bg-creme">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
