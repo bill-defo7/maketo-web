@@ -10,10 +10,15 @@ import { useToast } from '../components/Toast.jsx';
 import { compresserImage } from '../utils/image.js';
 import { stockage } from '../utils/stockage.js';
 import { SLUG_PETITES_ANNONCES } from '../utils/format.js';
+import { useAuth } from '../auth/AuthContext.jsx';
+
+const SLUG_OBJETS_PERDUS = 'objets-perdus';
+/** Catégories réservées aux messages (pas de prix ni d'état). */
+const SLUGS_MESSAGES = [SLUG_PETITES_ANNONCES, SLUG_OBJETS_PERDUS];
 
 const MAX_PHOTOS = 4;
 const CLE_BROUILLON = 'maketo:brouillon';
-const VIDE = { type: 'ARTICLE', categorieId: null, titre: '', description: '', prix: '', prixADebattre: false, etat: 'OCCASION', lieu: 'Campus' };
+const VIDE = { type: 'ARTICLE', categorieId: null, titre: '', description: '', prix: '', prixADebattre: false, etat: 'OCCASION', lieu: 'Campus', telephoneContact: '' };
 const nouvelleCle = () => Math.random().toString(36).slice(2);
 
 /** Création ET modification d'une annonce (/vendre et /annonces/:id/modifier). */
@@ -23,6 +28,8 @@ export default function Vendre() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { utilisateur } = useAuth();
+  const estAdmin = utilisateur?.role === 'ADMIN';
   const champFichier = useRef(null);
   const initialise = useRef(false);
 
@@ -44,7 +51,8 @@ export default function Vendre() {
     const a = existante.data;
     setValeurs({
       type: a.type, categorieId: a.categorie.id, titre: a.titre, description: a.description || '',
-      prix: a.prix ?? '', prixADebattre: a.prixADebattre, etat: a.etat || 'OCCASION', lieu: a.lieu || ''
+      prix: a.prix ?? '', prixADebattre: a.prixADebattre, etat: a.etat || 'OCCASION', lieu: a.lieu || '',
+      telephoneContact: a.vendeur?.whatsapp || ''
     });
     setPhotos(a.photos.map((p) => ({ cle: `p${p.id}`, id: p.id, apercu: p.url, statut: 'ok', existante: true })));
   }, [existante.data]);
@@ -94,6 +102,8 @@ export default function Vendre() {
 
   const petite = valeurs.type === 'MESSAGE';
   const idPetitesAnnonces = categories.data?.find((c) => c.slug === SLUG_PETITES_ANNONCES)?.id;
+  const idsMessages = (categories.data || []).filter((c) => SLUGS_MESSAGES.includes(c.slug)).map((c) => c.id);
+  const numeroContact = valeurs.telephoneContact.replace(/\D/g, '').replace(/^237(?=6\d{8}$)/, '');
 
   /** Article ou simple message : le message n'a ni prix, ni état, ni titre à écrire. */
   const choisirType = (type) => {
@@ -101,13 +111,14 @@ export default function Vendre() {
     setValeurs((v) => ({
       ...v,
       type,
-      categorieId: type === 'MESSAGE' ? (idPetitesAnnonces ?? v.categorieId) : (v.categorieId === idPetitesAnnonces ? null : v.categorieId)
+      categorieId: type === 'MESSAGE' ? (idPetitesAnnonces ?? v.categorieId) : (idsMessages.includes(v.categorieId) ? null : v.categorieId)
     }));
   };
 
   const valider = () => {
     const e = {};
     if (!valeurs.categorieId) e.categorieId = 'Choisis une catégorie';
+    if (estAdmin && !/^6\d{8}$/.test(numeroContact)) e.telephoneContact = 'Indique le numéro WhatsApp à contacter (6XXXXXXXX)';
     if (petite) {
       if (valeurs.description.trim().length < 10) e.description = 'Écris ton message (10 caractères minimum)';
       setErreurs(e);
@@ -166,7 +177,8 @@ export default function Vendre() {
           prix: null,
           prixADebattre: false,
           etat: null,
-          lieu: valeurs.lieu.trim() || null
+          lieu: valeurs.lieu.trim() || null,
+          telephoneContact: estAdmin ? numeroContact : null
         } : {
           type: 'ARTICLE',
           categorieId: valeurs.categorieId,
@@ -175,7 +187,8 @@ export default function Vendre() {
           prix: valeurs.prixADebattre && valeurs.prix === '' ? null : Number(String(valeurs.prix).replace(/\s/g, '')),
           prixADebattre: valeurs.prixADebattre,
           etat: valeurs.etat,
-          lieu: valeurs.lieu.trim() || null
+          lieu: valeurs.lieu.trim() || null,
+          telephoneContact: estAdmin ? numeroContact : null
         };
         const annonce = modification ? await annoncesApi.modifier(id, corps) : await annoncesApi.publier(corps);
         annonceId = annonce.id;
@@ -205,7 +218,7 @@ export default function Vendre() {
       {!modification && (
         <div role="radiogroup" aria-label="Que veux-tu publier ?" className="mx-4 mt-2.5 grid grid-cols-2 gap-2.5">
           <ChoixType actif={!petite} onClick={() => choisirType('ARTICLE')} icone="boite" titre="Un article" texte="Je vends un objet ou un service, avec un prix" />
-          <ChoixType actif={petite} onClick={() => choisirType('MESSAGE')} icone="message" titre="Un message" texte="Je cherche, je propose, j'informe : un texte suffit" />
+          <ChoixType actif={petite} onClick={() => choisirType('MESSAGE')} icone="message" titre="Un message" texte="Je cherche, je propose, objet perdu ou trouvé : un texte suffit" />
         </div>
       )}
 
@@ -257,7 +270,7 @@ export default function Vendre() {
         <fieldset>
           <legend className="text-base font-extrabold">Catégorie</legend>
           <div className="mt-2.5 flex flex-wrap gap-2">
-            {categories.data?.filter((c) => petite || c.slug !== SLUG_PETITES_ANNONCES).map((c) => (
+            {categories.data?.filter((c) => petite || !SLUGS_MESSAGES.includes(c.slug)).map((c) => (
               <button key={c.id} type="button" aria-pressed={valeurs.categorieId === c.id} onClick={() => changer('categorieId', c.id)}
                 className={`h-11 rounded-full px-4 text-sm ${valeurs.categorieId === c.id ? 'bg-brand font-extrabold text-white' : 'border-[1.5px] border-bordure bg-surface font-bold text-encre'}`}>
                 {c.nom}
@@ -307,6 +320,12 @@ export default function Vendre() {
             className="w-full resize-none rounded-2xl border-[1.5px] border-bordure bg-surface px-4 py-3.5 text-[15px] focus:border-brand focus:outline-none" />
         </div>
         </>)}
+
+        {estAdmin && (
+          <Champ label="Numéro WhatsApp à contacter" type="tel" inputMode="numeric" value={valeurs.telephoneContact}
+            onChange={(e) => changer('telephoneContact', e.target.value)} placeholder="6XX XX XX XX" erreur={erreurs.telephoneContact}
+            aide="Tu publies pour quelqu'un : les intéressés écriront à ce numéro, pas au tien." />
+        )}
 
         <Champ label={petite ? 'Lieu (facultatif)' : "Où récupérer l'article ?"} value={valeurs.lieu} onChange={(e) => changer('lieu', e.target.value)} maxLength={100}
           placeholder="Campus, Ambam centre…" erreur={erreurs.lieu} />

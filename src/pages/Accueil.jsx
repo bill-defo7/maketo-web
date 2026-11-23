@@ -19,7 +19,7 @@ import { BoutonLangue } from '../i18n/Langue.jsx';
 import { initiales } from '../utils/format.js';
 
 export default function Accueil({ modeRecherche = false }) {
-  const { utilisateur } = useAuth();
+  const { utilisateur, pret } = useAuth();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
   const categorie = params.get('categorie') || '';
@@ -65,7 +65,9 @@ export default function Accueil({ modeRecherche = false }) {
           <div className="flex items-center gap-1.5">
           <BoutonLangue surFondSombre />
           <BoutonTheme surFondSombre />
-          {utilisateur ? (
+          {!pret ? (
+            <span aria-label="Chargement" className="h-11 w-11 animate-pulse rounded-full bg-white/15" />
+          ) : utilisateur ? (
             <Link to="/compte" aria-label="Mon compte"
               className="flex h-11 w-11 items-center justify-center rounded-full bg-brand font-display text-sm font-extrabold text-white">
               {initiales(utilisateur.prenom, utilisateur.nom)}

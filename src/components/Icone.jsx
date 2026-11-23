@@ -27,13 +27,15 @@ const TRACES = {
   agrandir: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   suivant: <path d="M9 6l6 6-6 6" />,
   soleil: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
+  goutte: <path d="M12 3s-6 6.5-6 11a6 6 0 0 0 12 0c0-4.5-6-11-6-11z" />,
+  loupe: <><circle cx="10" cy="10" r="6" /><path d="M20 20l-5.5-5.5M10 7.5v3M10 13h.01" /></>,
   lune: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
 };
 
 /** Icône associée à chaque catégorie (par son slug). */
 export const ICONES_CATEGORIES = {
   'petites-annonces': 'message', vetements: 'chemise', beaute: 'etincelle', nourriture: 'couverts',
-  electronique: 'smartphone', livres: 'livre', logement: 'accueil', services: 'outil', divers: 'boite'
+  electronique: 'smartphone', livres: 'livre', logement: 'accueil', services: 'outil', 'objets-perdus': 'loupe', 'produits-menagers': 'goutte', divers: 'boite'
 };
 
 export default function Icone({ nom, taille = 20, epaisseur = 2, plein = false, className = '' }) {

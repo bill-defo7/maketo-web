@@ -11,7 +11,7 @@ const lien = ({ isActive }) =>
 
 /** Sur tablette et ordinateur, la barre du bas est remplacée par cette barre en haut. */
 export default function EnTeteBureau() {
-  const { utilisateur } = useAuth();
+  const { utilisateur, pret } = useAuth();
   return (
     <header className="sticky top-0 z-40 hidden border-b border-trait bg-surface/95 backdrop-blur md:block">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-3 lg:gap-6">
@@ -26,7 +26,9 @@ export default function EnTeteBureau() {
           <BoutonLangue />
           <BoutonTheme />
           <Link to="/vendre" className="btn-primaire h-11 px-5 text-sm"><Icone nom="plus" taille={18} epaisseur={2.6} />Publier</Link>
-          {utilisateur ? (
+          {!pret ? (
+            <span aria-label="Chargement" className="h-11 w-11 animate-pulse rounded-full bg-sable" />
+          ) : utilisateur ? (
             <Link to="/compte" aria-label="Mon compte" className="flex h-11 w-11 items-center justify-center rounded-full bg-nuit font-display text-sm font-extrabold text-brand-peche">
               {initiales(utilisateur.prenom, utilisateur.nom)}
             </Link>

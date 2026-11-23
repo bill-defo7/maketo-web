@@ -11,7 +11,9 @@ const DESCRIPTIONS = {
   nourriture: 'Snacks, plats, produits locaux',
   electronique: 'Téléphones, ordinateurs, accessoires',
   livres: 'Livres, polycopiés, fournitures',
-  logement: 'Chambres, lits, meubles',
+  logement: 'Chambres, meubles, rideaux, draps',
+  'objets-perdus': 'Perdu ou trouvé au campus',
+  'produits-menagers': 'Savon liquide, javel, soupline, lessive',
   services: 'Répétitions, couture, réparations',
   divers: 'Tout le reste'
 };
